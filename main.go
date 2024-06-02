@@ -4,9 +4,17 @@ import (
 	"github/SEq7GVODOU4NEdrJu/websocketserver/pkg"
 	"log"
 	"net/http"
+	"runtime"
 )
 
 func main() {
+	workerPool := pkg.NewWorkerPool(runtime.NumCPU())
+	for i := 0; i < 100; i++ {
+		workerPool.Submit(func(args ...interface{}) {
+
+		}, i)
+	}
+
 	server := pkg.NewWebSocketServer()
 	go server.Run()
 

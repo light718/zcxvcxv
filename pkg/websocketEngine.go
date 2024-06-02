@@ -29,7 +29,7 @@ type Message struct {
 // WebSocket服务器结构
 type WebSocketServer struct {
 	clients    map[*WebSocketConnection]bool
-	broadcast  chan Message
+	message    chan Message
 	register   chan *WebSocketConnection
 	unregister chan *WebSocketConnection
 	pool       *sync.Pool
@@ -39,7 +39,7 @@ type WebSocketServer struct {
 func NewWebSocketServer() *WebSocketServer {
 	return &WebSocketServer{
 		clients:    make(map[*WebSocketConnection]bool),
-		broadcast:  make(chan Message, 16384),
+		message:    make(chan Message, 16384),
 		register:   make(chan *WebSocketConnection),
 		unregister: make(chan *WebSocketConnection),
 		pool: &sync.Pool{
@@ -61,7 +61,7 @@ func (server *WebSocketServer) Run() {
 				delete(server.clients, connection)
 				close(connection.send)
 			}
-		case message := <-server.broadcast:
+		case message := <-server.message:
 			for connection := range server.clients {
 				select {
 				case connection.send <- message:
@@ -104,7 +104,7 @@ func (server *WebSocketServer) handleReads(connection *WebSocketConnection) {
 			break
 		}
 
-		server.broadcast <- Message{MessageType: messageType, Content: message}
+		server.message <- Message{MessageType: messageType, Content: message}
 	}
 }
 
